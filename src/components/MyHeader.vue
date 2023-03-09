@@ -7,18 +7,17 @@
                         <el-menu
                         :router="true"
                         :default-active="activeIndex"
-                        class="el-menu-demo"
+                        class="el-menu"
                         mode="horizontal"
                         @select="handleSelect"
-                        background-color="#455E7A"
                         text-color="#fff"
+                        :background-color= "menu_BgColor"
                         active-text-color="#F15B49">
                             <el-menu-item index="/home">首页</el-menu-item>
                             <el-menu-item index="/publicInformation">公告消息</el-menu-item>
-                            <el-menu-item index="/payCenter">充值中心</el-menu-item>
                             <el-menu-item index="/about">关于</el-menu-item>
+                            <el-menu-item index="/UserCenter">用户中心</el-menu-item>
                             <el-menu-item index="/start">开始使用</el-menu-item>
-
                     </el-menu>
                 </div>    
             </div>
@@ -39,8 +38,17 @@
 import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引入
     export default {
         name: 'MyHeader',
+
+        mounted(){
+            this.header_dom = document.querySelector('.el-container');
+            
+            window.addEventListener('wheel', this.scrollFunc)         
+        },
+ 
         data() {
             return {
+                header_dom: null,  // 头部导航栏挂载以后初始化,获取头部容器的dom对象
+                menu_BgColor: "#455E7A",
                 activeIndex:'1'  // 选中的菜单项 索引路径
             }
         },
@@ -56,7 +64,21 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
             ...mapState(['loginUserInfo','isLogin'])
         },
         methods: {
+
+            /****  这里存在一个显示bug    ******/
+                
             handleSelect(){   // 选中菜单项的回调函数
+                console.log("菜单项回调");
+                if (this.$route.name != 'home'){
+                    console.log("移除滚轮事件");
+                    window.removeEventListener('wheel', this.scrollFunc) 
+                    this.header_dom.style.backgroundColor = "#455E7A"
+                    this.menu_BgColor = "#455E7A"
+                } 
+                else {
+                    console.log("添加滚轮事件!");
+                    window.addEventListener('wheel', this.scrollFunc) 
+                }
             },
 
             // 注销功能
@@ -73,6 +95,36 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
                 }).catch(() => {
                     this.$message({type: 'info',message: '已取消删除'});          
                 });
+            },
+
+            // 滚动事件,为了兼容火狐滚轮事件标准
+            scrollFunc(e){
+                var e = e || window.event;
+                
+                if(e.wheelDelta) {
+                    if (e.wheelDelta > 50){  
+                        this.header_dom.style.backgroundColor = "#455E7A"
+                        this.menu_BgColor = "#455E7A"
+                    } 
+                    else {   // 鼠标滚轮向下滚动, 将导航栏背景 设置为透明色
+                        this.header_dom.style.backgroundColor = "transparent"
+                        this.menu_BgColor = "#ffffff00"
+                    }
+                }
+                else if(e.detail) {
+                    if (e.detail > 50){  
+                        this.header_dom.style.backgroundColor = "#455E7A"
+                        this.menu_BgColor = "#455E7A"
+                    } 
+                    else {  // 鼠标滚轮向下滚动, 将导航栏背景 设置为透明色     
+                        this.header_dom.style.backgroundColor = "transparent"
+                        this.menu_BgColor = "#ffffff00"
+                    }
+                
+                } 
+                else {
+                    console.log("滚轮值获取失败", e);
+                }
             }
         },
     }
@@ -81,19 +133,21 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
 <style scoped>
     .el-container {
         height: 100%;
+        position: sticky;
+        top: 0;
+        z-index: 1; /* 确保元素在顶部 */ 
+        background-color: #455E7A;
     }
+
     .el-header{
         padding: 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: #fff;
-        background-color: #455E7A;
     }
     
     .header-right span{
         margin: 5px;
-        color: #fff;
     }
 
     .header-left{
@@ -105,10 +159,6 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
         margin: 8px;
         font-weight: bold;
         color: #F15B49;
-    }
-    
-    .el-main{
-        background-color: aqua;
     }
 
     .link{

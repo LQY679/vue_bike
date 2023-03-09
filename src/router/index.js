@@ -8,7 +8,7 @@ import AdminPanle from '../pages/AdminPanle.vue'
 import About from '../pages/About'
 import Home from '../pages/Home'
 import Start from '../pages/Start'
-import PayCenter from '../pages/PayCenter'
+import UserCenter from '../pages/UserCenter'
 import PublicInformation from '../pages/PublicInformation'
 
 import QRcodeScan from '../components/QRcodeScan'
@@ -57,10 +57,10 @@ const router = new VueRouter({
         meta:{titel:"开始使用",isAuth:true}
       },
       {   
-        path :'/payCenter',
-        name :'payCenter',
-        component: PayCenter,
-        meta:{titel:"充值中心",isAuth:true}
+        path :'/UserCenter',
+        name :'UserCenter',
+        component: UserCenter,
+        meta:{titel:"用户中心",isAuth:true}
       },
       {   
         path :'/publicInformation',
