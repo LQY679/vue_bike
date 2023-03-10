@@ -67,9 +67,8 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
 
             /****  这里存在一个显示bug    ******/
                 
-            handleSelect(){   // 选中菜单项的回调函数
-                console.log("菜单项回调");
-                if (this.$route.name != 'home'){
+            handleSelect(path){   // 选中菜单项的回调函数
+                if (path != '/home'){
                     console.log("移除滚轮事件");
                     window.removeEventListener('wheel', this.scrollFunc) 
                     this.header_dom.style.backgroundColor = "#455E7A"
