@@ -28,7 +28,7 @@
                     </el-submenu>
 
                     <el-submenu index="3">
-                        <template slot="title"><i class="el-icon-shopping-cart-1"></i>订单管理</template>
+                        <template slot="title"><i class="el-icon-shopping-cart-1"></i>工单管理</template>
                         <el-menu-item @click="switchTable('ridingOrderTable')" index="3-1">骑行订单列表</el-menu-item>
                     </el-submenu>
 
@@ -44,6 +44,7 @@
             <el-main>
                 <!-- 用户管理列表 -->
                 <el-table v-if="checkTableType === 'userTable'" height="100%" style="width: 100%" :stripe="true" :border="true"
+                    ref="table"
                     :data="userInfos.filter(data => !search || data.uid.includes(search))">
                     <el-table-column label="用户名" prop="uid">
                     </el-table-column>
@@ -55,7 +56,7 @@
                     </el-table-column>
 
                     <el-table-column>
-                        <template slot="header" slot-scope="scope">
+                        <template slot="header" slot-scope="scope" ref="searchBox">
                             <el-input v-model="search" size="mini" placeholder="输入用户名搜索" />
                         </template>
 
@@ -96,6 +97,7 @@
 
                 <!-- 车辆列表 -->
                 <el-table v-if="checkTableType === 'bikeTable'" height="100%" style="width: 100%" :stripe="true" :border="true" 
+                    ref="table"    
                     :data="bikeInfos.filter(data => !search || data.id.includes(search))" >
                     <el-table-column label="车辆编号" prop="id" />
                     
@@ -105,9 +107,11 @@
 
                     <el-table-column label="所处位置" prop="position"/>
 
-                    <el-table-column>
-                        <template slot="header" slot-scope="scope">
-                            <el-input v-model="search" size="mini" placeholder="输入车辆编号搜索" />
+                    <el-table-column >
+                        <template  slot="header" slot-scope="scope" ref="searchBox">
+                            <el-input v-if="checkTableType === 'bikeTable'" v-model="search" size="mini" placeholder="输入车辆编号搜索" />
+                            <!-- 解决 渲染缓存问题 -->
+                            <span v-else>订单状态</span>
                         </template>
 
                         <template slot-scope="scope">
@@ -120,7 +124,7 @@
 
                 <!-- 骑行订单列表 -->
                 <el-table v-if="checkTableType === 'ridingOrderTable'" height="100%" style="width: 100%" :stripe="true" :border="true"
-                    size="mini"
+                    size="mini" ref="table"
                     :data="ridingOrderList.filter(data => !search || data.order_id.includes(search))">
                     <el-table-column label="订单编号" prop="order_id" />
 
@@ -137,7 +141,7 @@
                     <el-table-column label="订单完成时间" prop="end_time" />
 
                     <el-table-column>
-                        <template slot="header" slot-scope="scope">
+                        <template slot="header" slot-scope="scope" >
                             <el-input v-model="search" size="mini" placeholder="输入骑行订单编号搜索" />
                         </template>
 
@@ -176,6 +180,11 @@
             }, 1300);
             this.getAllUser();
         },
+        
+        beforeUpdate(){
+            
+        },
+
         data() {
             return {
                 isLoaded: false,   // 加载动画判断标志,用户列表或车辆列表加载成功为true
@@ -266,7 +275,6 @@
                     .then((response) => {
                         let result = response.data 
                         if (result.code == 1000) {
-                            console.log(result.data);
                             this.ridingOrderList = result.data
                             this.isLoaded = true
                         } else {

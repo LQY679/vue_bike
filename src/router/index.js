@@ -9,9 +9,8 @@ import About from '../pages/About'
 import Home from '../pages/Home'
 import Start from '../pages/Start'
 import UserCenter from '../pages/UserCenter'
+import MobileUserLogin from '../pages/MobileUserLogin'
 import PublicInformation from '../pages/PublicInformation'
-
-import QRcodeScan from '../components/QRcodeScan'
 
 import Store from '../store'  // 引入Vuex状态,获取数据
 
@@ -21,22 +20,23 @@ const router = new VueRouter({
       {
         path: "/",redirect: "/home"
       },
-      // 测试扫描组件
       {
-        path: '/QRcodeScan',
-        component: QRcodeScan
+        name: "mobileLogin",
+        path: "/login",
+        component: MobileUserLogin,
+        meta:{titel:"登陆",isAuth:false} 
       },
       {
         name: "login",
-        path: "/login",
+        path: "/oldLogin",
         component: UserLogin,
-        meta:{titel:"登陆",isAuth:false}   // titel: 页面标题 , isAuth: 布尔值, 判断该路由是否需要登陆授权后才能进入
+        meta:{titel:"登陆",isAuth:false}   
       },
       {   
         path :'/adminPanle',
         name :'adminPanle',
         component: AdminPanle,
-        meta:{titel:"管理面板",isAuth:true}
+        meta:{titel:"管理面板",isAuth:true} // titel: 页面标题 , isAuth: 布尔值, 判断该路由是否需要登陆授权后才能进入
       },
       {   
         path :'/about',

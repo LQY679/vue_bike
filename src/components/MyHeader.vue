@@ -14,7 +14,7 @@
                         :background-color= "menu_BgColor"
                         active-text-color="#F15B49">
                             <el-menu-item index="/home">首页</el-menu-item>
-                            <el-menu-item index="/publicInformation">公告消息</el-menu-item>
+                            <!-- <el-menu-item index="/publicInformation">公告消息</el-menu-item> -->
                             <el-menu-item index="/about">关于</el-menu-item>
                             <el-menu-item index="/UserCenter">用户中心</el-menu-item>
                             <el-menu-item index="/start">开始使用</el-menu-item>
@@ -64,18 +64,16 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
             ...mapState(['loginUserInfo','isLogin'])
         },
         methods: {
-
             /****  这里存在一个显示bug    ******/
-                
             handleSelect(path){   // 选中菜单项的回调函数
                 if (path != '/home'){
-                    console.log("移除滚轮事件");
+                    // console.log("移除滚轮事件");
                     window.removeEventListener('wheel', this.scrollFunc) 
                     this.header_dom.style.backgroundColor = "#455E7A"
                     this.menu_BgColor = "#455E7A"
                 } 
                 else {
-                    console.log("添加滚轮事件!");
+                    // console.log("添加滚轮事件!");
                     window.addEventListener('wheel', this.scrollFunc) 
                 }
             },
