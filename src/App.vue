@@ -11,8 +11,6 @@
 
   import MyHeader from './components/MyHeader.vue'
 
-
-
   export default {
 
     name: 'App',
@@ -38,15 +36,35 @@
         // 刷新完毕后 将sessionStorage中的登陆状态数据放入Vuex,随后清空sessionStorage的缓存状态
         if (sessionStorage.getItem("loginState")) {
           let loginState = JSON.parse(sessionStorage.getItem("loginState"))
-          this.$store.state.sessionID = loginState.sessionID
           this.$store.state.isLogin = loginState.isLogin
-          this.$store.state.loginUserInfo = loginState.loginUserInfo
+          if (loginState.isLogin) {   // 如果是登陆状态, 重新从服务器更新一下用户信息
+            let uid = loginState.loginUserInfo.uid
+            this.$axios.get(`/getUserById/${uid}`)
+              .then((response) => {
+                let result = response.data
+                if (response.status == 200 && result.code == 1000) {  // 如果查询成功. 则更新Vuex的登陆用户信息
+                  this.$store.state.loginUserInfo = result.data
+                } 
+                else {
+                  alert("更新登陆状态用户信息异常!")
+                }
+              })
+              .catch((error) => {
+                alert("网络异常,更新用户信息失败!")
+                console.log(error);
+              })
+          }
+          else {
+            this.$store.state.loginUserInfo = loginState.loginUserInfo
+          }
+
           sessionStorage.removeItem("loginState")
         }
+
+
         //  在刷新时将 Vuex 中的数据保存在 sessionStore中, 避免丢失
         window.addEventListener("beforeunload", () => {
           let loginState = {    // 临时变量,封装一个Vuex中的对象登陆状态数据
-            sessionID: this.$store.state.sessionID,
             isLogin: this.$store.state.isLogin,
             loginUserInfo: this.$store.state.loginUserInfo
           }
@@ -70,6 +88,7 @@
     },
 
     computed: {
+      // 提供给导航条展示使用
       loginUserInfo() {
         return this.$store.state.loginUserInfo
       },

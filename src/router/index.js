@@ -85,7 +85,7 @@ router.beforeEach((to, from, next) => {
         next()
     }
     else{  // 需要授权则校验登陆状态
-        if (Store.state.sessionID && Store.state.isLogin){
+        if (Store.state.isLogin){
           next()
         }
         else{

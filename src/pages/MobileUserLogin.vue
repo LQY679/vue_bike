@@ -56,17 +56,17 @@
                 userInfo: {
                     uid: '',
                     pwd: "",
-                    type: 'user'
+                    type: 'user',
                 },
             }
         },
 
         computed: {
-            
+
         },
         methods: {
 
-            checkBoxChange(){
+            checkBoxChange() {
                 // 切换用户类型
                 this.userInfo.type = this.userInfo.type == 'user' ? 'admin' : 'user'
                 // console.log("复选框改变!",this.userInfo.type);
@@ -74,16 +74,20 @@
 
             // 提交登陆事件
             submitLogin() {
+                if (!Boolean(this.userInfo.uid) || !Boolean(this.userInfo.pwd)) {
+                    this.$message({ message: '用户名或密码未填写!', type: 'warning' });
+                    return
+                }
                 this.$store.dispatch("login", this.userInfo)
-                    .then((isSuccess) => {  // 如果用户名和密码都正确返回true, 否则返回false
-                        if (isSuccess) {
+                    .then((result) => {  // 如果用户名和密码都正确返回true, 否则返回false
+                        if (result.code == 1000) {
                             this.$message({ message: '登陆成功!', type: 'success', duration: 500 })
-                                /*
-                                    redirectPath: 普通用户根据使用的设备不同跳转到不同的页面
-                                    普通用户使用移动端设备登陆后跳转至 开始使用页面
-                                    使用PC端跳转至首页
-                                 */
-                            let redirectPath = this.isMobile ? "/start" : "/home" 
+                            /*
+                                redirectPath: 普通用户根据使用的设备不同跳转到不同的页面
+                                普通用户使用移动端设备登陆后跳转至 开始使用页面
+                                使用PC端跳转至首页
+                             */
+                            let redirectPath = this.isMobile ? "/start" : "/home"
                             switch (this.userInfo.type) {  // 根据登陆成功的用户类型跳转至对应的界面
                                 case 'user': {
                                     this.$router.replace({
@@ -101,44 +105,44 @@
                             }
                         }
                         else {
-                            this.$message.error('登陆失败,请检查输入信息后重试!')
+                            this.$message.error(result.msg)
                         }
-                });
+                    });
             },
             //  提交注册按钮事件
-      submitLogon() {
-        if (!Boolean(this.userInfo.uid) || !Boolean(this.userInfo.pwd)) {
-            this.$message({ message: '用户名或密码未填写!', type: 'warning' });
-            return
-        }
-        this.$axios({
-        method: 'post',
-        url: '/addUser',
-        data: {
-            uid: this.userInfo.uid,
-            pwd: this.userInfo.pwd,
-            type: this.userInfo.type
-        }
-        })
-        .then((response) => {
-            let return_data = response.data
-            if (return_data.msg == 'true') {
-            this.$message({ message: '注册成功!', type: 'success' });
+            submitLogon() {
+                if (!Boolean(this.userInfo.uid) || !Boolean(this.userInfo.pwd)) {
+                    this.$message({ message: '用户名或密码未填写!', type: 'warning' });
+                    return
+                }
+                this.$axios({
+                    method: 'post',
+                    url: '/addUser',
+                    data: {
+                        uid: this.userInfo.uid,
+                        pwd: this.userInfo.pwd,
+                        type: this.userInfo.type
+                    }
+                })
+                    .then((response) => {
+                        let return_data = response.data
+                        if (return_data.msg == 'true') {
+                            this.$message({ message: '注册成功!', type: 'success' });
+                        }
+                        else {
+                            this.$message.error('注册失败,用户已存在或者提交信息有误!');
+                        }
+                    })
+                    .catch((error) => {
+                        alert("注册网络请求失败!")
+                        console.log(error);
+                    });
             }
-            else {
-            this.$message.error('注册失败,用户已存在或者提交信息有误!');
-            }
-        })
-        .catch((error) => {
-            alert("注册网络请求失败!")
-            console.log(error);
-        });
-      }
-    },
+        },
 
 
 
-}
+    }
 </script>
 
 <style scoped>

@@ -11,22 +11,17 @@ const actions = {
     login(context,userInfo){
         return new Promise((resolve)=>{
             axios({
-                    method: 'get',
-                    url: `/getUserById/${userInfo.uid}`,
+                    method: 'post',
+                    url: "/login",
+                    data: userInfo
                 })
                 .then(function (response){
-                    let res_msg = response.data.msg    // 后端返回的判断信息
-                    let res_user = response.data.data  // 后端返回的用户信息
-                    let sessionID = response.data.sessionID  // 后端返回的 sessionID    
-                    // 查询到用户数据并且输入信息都正确
-                    if (res_msg=='true' &&userInfo.pwd == res_user.pwd && userInfo.type == res_user.type){
-                        context.commit('LOGIN',response.data)
-                        resolve(true)
+
+                    let result = response.data    
+                    if (result.code == 1000){   // 登陆成功
+                        context.commit('LOGIN',result.data.userInfo)
                     }
-                    // 查询不到数据或者密码,用户类型有误
-                    else{ 
-                        resolve(false)
-                    } 
+                    resolve(result) 
                 })
                 .catch(function (error){
                     alert("登陆网络请求失败!")
@@ -54,12 +49,7 @@ const actions = {
               console.log(error);
               resolve(false)
             });
-            // localStorage.setItem("orderObj",JSON.stringify(orderObj))  // 模拟提交订单到服务器
-            // // 如果插入成功:
-            // context.commit("SUBMIT_ORDER",orderObj)
-            // resolve(true)
-            // 否则
-            // resolve(false)
+            
         })
     },
 
@@ -88,15 +78,14 @@ const actions = {
 
 const mutations = {
     // 将登陆状态信息保存到State中
-    LOGIN(state,resData){ // resData: 后端传递的数据 包括 msg, 用户信息(data), sessionID
-        state.loginUserInfo = resData.data
-        state.sessionID = resData.sessionID
+    LOGIN(state,userInfo){ 
+        state.loginUserInfo = userInfo
+        // state.sessionID = resData.sessionID
         state.isLogin = true
     },
     // 注销登陆: 将登陆状态数据置空
     LOGOUT(state){
         state.loginUserInfo = {}
-        state.sessionID = ''
         state.isLogin = false
     },
 
@@ -124,12 +113,15 @@ const mutations = {
 
 const state = {
     // 登陆状态数据: 若登陆成功, 将SessionID 保存到 SessionStorage中,并且将 State中的loginState 设置为 true
-    sessionID: '',  // 用于与后端校验控制状态
+    // sessionID: '',  // 用于与后端校验控制状态
     isLogin:false,   // 用于控制 "登陆" "注销" "用户名"相关dom的渲染 
     loginUserInfo:{   // 用户在头部导航条展示用户信息, 并且当前登陆的用户type属性还用于控制MyHeader是否渲染
+        uid: '',
+        pwd: '',
+        type: '',
+        email: ''
     },
 
-   
     orderObj:{
         order_id:'',
         trade_no: '',
@@ -138,7 +130,7 @@ const state = {
         order_status: '',
         start_time: '',
         end_time: '',
-      },
+    },
 }
 
 export default new Vuex.Store({
