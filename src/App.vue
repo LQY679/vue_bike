@@ -22,6 +22,10 @@
       this.registerMobileListener()  // 注册媒体设备监听事件
     },
     mounted() {
+      // 在页面刷新或者重定向,假如登陆的用户是管理员,则自动跳转到管理面板界面
+      if (this.loginUserInfo.type == 'admin'){
+        this.$router.replace('/adminPanle')
+      }
     },
 
     data() {

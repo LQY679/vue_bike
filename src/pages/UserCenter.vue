@@ -29,7 +29,7 @@
       </el-descriptions-item>
     </el-descriptions>
 
-    <el-dialog title="修改用户信息" :visible.sync="isShowUserEditForm" :model="userForm" :closed="beforeCloseForm()"
+    <el-dialog title="修改用户信息" :visible.sync="isShowUserEditForm" :model="userForm"
       :close-on-click-moda="false" width="60vw" center>
       <!-- 用户信息表单 -->
       <el-form label-position="'right'" label-width="80px">
@@ -103,12 +103,9 @@
     },
 
     data() {
-      let obj = {}
-      Object.assign(obj, this.$store.state.loginUserInfo)  // 将用户信息浅拷贝给编辑表单
-      obj.verifyCode = ''
       return {
         user: this.$store.state.loginUserInfo,
-        userForm: obj,
+        userForm: {},
         editSelect: '',  // 选择编辑的类型 可选: 'pwd' , 'email'
         orderList: [],
         isShowPwd: false,
@@ -172,13 +169,6 @@
 
     methods: {
 
-      beforeCloseForm() {
-        // this.userForm.pwd = this.user.pwd
-        // this.userForm.email = this.user.email
-        // this.userForm.verifyCode = ''
-        // console.log("关闭前的回调!");
-      },
-
       getUserOrder() {
         this.$axios({
           method: 'get',
@@ -203,6 +193,8 @@
 
       // 点击按钮, 更新 '编辑选择' 的状态, 同时展示 用户信息表单
       editUserInfo(editSelect) {
+        this.userForm = Object.assign({}, this.$store.state.loginUserInfo)  
+        this.userForm.verifyCode = ''
         this.editSelect = editSelect
         this.isShowUserEditForm = true
 
