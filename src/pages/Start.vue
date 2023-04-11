@@ -116,12 +116,19 @@
           seconds: 0,
           ms: 0
         },
-
-        operation: ''
+        operation: '',
+        repair: {
+          repair_id: '',
+          bike_id: '',
+          uid: '',
+          create_time: '',
+          finish_time: ''
+        }
       }
     },
-
+  
     mounted() {
+      console.log("挂载完毕!!!", this.$store.state.loginUserInfo);
       // 发送请求查询是否未完成的订单状态:
       axios.get('/getUnFinishOrderByUid', {
         params: {
@@ -328,8 +335,23 @@
       },
 
       //上报车辆故障功能
-      uploadBikeFault() {
-        alert("弹出故障申报页面...")
+      uploadBikeFault(bike_id) {
+        this.repair.bike_id = bike_id
+        this.repair.uid = this.loginUserInfo.uid
+        this.create_time = new Date().toLocaleString().replaceAll('/', '-')
+
+        this.$axios.post('/uploadBikeRepair', this.repair)
+          .then((response) => {
+            let result = response.data
+            let messageType = 'error'
+            if (response.status == 200 && result.code == 1000) {
+              messageType = 'success'
+              this.QRcodeScannerVisible = false
+            }
+            this.$message({ message: result.msg, type: messageType })
+          }).catch((error) => {
+            alert("网络请求失败!")
+          })
       },
 
       // 输入编号的回调事件, 根据参数operation执行对应操作
@@ -354,7 +376,7 @@
             }
             // 输入编号申报故障
             case 'upload-bike-fault': {
-              this.uploadBikeFault()
+              this.uploadBikeFault(value)
               break
             }
           }
@@ -371,7 +393,7 @@
 
       // 组件事件回调函数,当扫描到二维码时触发,扫码组件将传递扫描到数据作为参数传递过来
       getQRcode(QRcode) {
-        this.QRcode = QRcode  // 测试时展示识别结果用
+        this.QRcode = QRcode  // 测试时展示识别结果用, QRcode.data 代表扫描到的结果(车辆编号)
         switch (this.operation) {
           case "start": {
             this.isUsable(QRcode.data).then((resObj) => {
@@ -387,8 +409,7 @@
             break
           }
           case 'upload-bike-fault': {
-            this.QRcodeScannerVisible = false
-            this.uploadBikeFault()
+            this.uploadBikeFault(QRcode.data)
           }
         }
 
@@ -398,11 +419,11 @@
         axios({
           url: '/reviewAliPayOrder',
           method: "post",
-          params:{
+          params: {
             "order_id": this.orderObj.order_id
           }
         }
-        ).then((response)=>{
+        ).then((response) => {
           let result = response.data
           if (result.code == 1000) {
             this.$message({ message: `${result.msg}`, type: 'success', duration: 1500 })
@@ -414,10 +435,10 @@
             this.$message.error(`${result.msg}`);
           }
         })
-        .catch( (error) => {
-          alert("网络请求失败!")
-          console.log(error);
-        });
+          .catch((error) => {
+            alert("网络请求失败!")
+            console.log(error);
+          });
       }
 
     },

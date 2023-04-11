@@ -23,7 +23,7 @@
     },
     mounted() {
       // 在页面刷新或者重定向,假如登陆的用户是管理员,则自动跳转到管理面板界面
-      if (this.loginUserInfo.type == 'admin'){
+      if (this.loginUserInfo.type == 'admin') {
         this.$router.replace('/adminPanle')
       }
     },
@@ -37,26 +37,31 @@
     methods: {
       // 通过sessionStorage临时存储状态数据解决Vuex刷新页面丢重置数据问题
       synchState() {
+
         // 刷新完毕后 将sessionStorage中的登陆状态数据放入Vuex,随后清空sessionStorage的缓存状态
         if (sessionStorage.getItem("loginState")) {
           let loginState = JSON.parse(sessionStorage.getItem("loginState"))
           this.$store.state.isLogin = loginState.isLogin
+          console.log("同步vuex状态...");
           if (loginState.isLogin) {   // 如果是登陆状态, 重新从服务器更新一下用户信息
-            let uid = loginState.loginUserInfo.uid
-            this.$axios.get(`/getUserById/${uid}`)
-              .then((response) => {
-                let result = response.data
-                if (response.status == 200 && result.code == 1000) {  // 如果查询成功. 则更新Vuex的登陆用户信息
-                  this.$store.state.loginUserInfo = result.data
-                } 
-                else {
-                  alert("更新登陆状态用户信息异常!")
-                }
-              })
-              .catch((error) => {
-                alert("网络异常,更新用户信息失败!")
-                console.log(error);
-              })
+            this.$store.dispatch("login", loginState.loginUserInfo)
+
+            // let uid = loginState.loginUserInfo.uid
+            // this.$axios.get(`/getUserById/${uid}`)
+            //   .then((response) => {
+            //     let result = response.data
+            //     if (response.status == 200 && result.code == 1000) {  // 如果查询成功. 则更新Vuex的登陆用户信息
+            //       this.$store.state.loginUserInfo = result.data
+            //     } 
+            //     else {
+            //       alert("更新登陆状态用户信息异常!")
+            //     }
+            //     console.log("更新登陆状态用户信息成功...");
+            //   })
+            //   .catch((error) => {
+            //     alert("网络异常,更新用户信息失败!")
+            //     console.log(error);
+            //   })
           }
           else {
             this.$store.state.loginUserInfo = loginState.loginUserInfo

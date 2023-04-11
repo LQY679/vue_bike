@@ -1,7 +1,7 @@
 <template>
     <div id="root">
         <!-- 车辆管理列表 -->
-        <el-table height="88vh" style="width: 100%" :stripe="true" :border="true" ref="table"
+        <el-table height="88vh" style="width: 100%" :stripe="true" :border="true" v-loading="loading"
             :data="BikeList.filter(data => !search || data.id.includes(search))">
             <el-table-column label="车辆编号" prop="id">
             </el-table-column>
@@ -38,30 +38,16 @@
         name: 'BikeTable',
 
         mounted() {
-
-            // 加载等待...
-            const loading = this.$loading({
-                lock: true,
-                text: '尊敬的大爹类型用户管理员,正在加载中ing请耐心等待...'
-                    + '或者您掏钱优化立马嘎嘎变快',
-                spinner: 'el-icon-loading',
-                background: 'rgba(255, 255, 255, 0.9)'
-            });
-            setTimeout(()=>{loading.close()}, 5000);  // 5秒后还没得到响应数据, 则超时关闭加载界面
-
             this.$axios.get('/getAllBike')
                 .then((response) => {
                     let result = response.data
                     if (response.status == 200 && result.code == 1000) {
                         this.BikeList = result.data
-                        setTimeout(()=>{
-                            loading.close();  // 关闭等待
-                        },500)
                     }
                     else{
                         this.$message({ message: result.msg, type: 'waring' })
                     }
-                    
+                    this.loading = false
                 }).catch((error) => {
                     alert("网络请求失败!")
                     console.log(error);
@@ -69,7 +55,7 @@
         },
         data() {
             return {
-                isLoaded: false,   // 加载动画判断标志,用户列表或车辆列表加载成功为true
+                loading: true,
                 formLabelWidth: '70px',
                 search: '',
                 BikeList: [],

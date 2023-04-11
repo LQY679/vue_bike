@@ -1,7 +1,7 @@
 <template>
     <div id="root">
         <!-- 用户管理列表 -->
-        <el-table height="88vh" style="width: 100%" :stripe="true" :border="true" ref="table"
+        <el-table height="88vh" style="width: 100%" :stripe="true" :border="true" v-loading="loading"
             :data="userList.filter(data => !search || data.uid.includes(search))">
             <el-table-column label="用户名" prop="uid">
             </el-table-column>
@@ -66,37 +66,26 @@
         name: 'UserTable',
 
         mounted() {
-
-            // 加载等待...
-            const loading = this.$loading({
-                lock: true,
-                text: '尊敬的大爹类型用户管理员,正在加载中ing请耐心等待...'
-                    + '或者您掏钱优化立马嘎嘎变快',
-                spinner: 'el-icon-loading',
-                background: 'rgba(255, 255, 255, 0.9)'
-            });
-
-            setTimeout(()=>{loading.close()}, 5000);  // 5秒后还没得到响应数据, 则超时关闭加载界面
-
             this.$axios.get('/getAllUser')
                 .then((response) => {
                     let result = response.data
                     if (response.status == 200 && result.code == 1000) {
                         this.userList = result.data
-                        setTimeout(()=>{
-                            loading.close();  // 关闭等待
-                        },500)
+
                     }
                     else {
                         this.$message({ message: '用户信息列表获取失败!', type: 'waring' })
                     }
+                   this.loading = false
                 }).catch((error) => {
                     alert("网络请求失败!")
                     console.log(error);
                 })
         },
+
         data() {
             return {
+                loading: true,
                 formLabelWidth: '70px',
                 search: '',
                 userList: [],
@@ -133,14 +122,14 @@
                         let messageType = 'error'
                         if (response.status == 200 && result.code == 1000) {
                             messageType = 'success'
-                            this.userList.splice(index,1)
+                            this.userList.splice(index, 1)
                         }
                         this.$message({ message: result.msg, type: messageType })
                     }).catch((error) => {
                         alert("网络请求失败!")
                         console.log(error);
                     })
-                    
+
             },
 
             handleDelete(index, selectObj) {
@@ -149,7 +138,7 @@
 
             handleEdit(index, selectObj) {
                 // 将选中的数据对象浅拷贝给 表单对象
-                this.userForm = Object.assign({}, selectObj)  
+                this.userForm = Object.assign({}, selectObj)
                 this.isShowForm = true
             },
 
@@ -172,7 +161,7 @@
                 })
             },
 
-            dialogColse(){
+            dialogColse() {
                 console.log("关闭对话框的回调!");
                 this.userForm = this.userList[this.index]
             },
