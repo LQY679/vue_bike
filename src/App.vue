@@ -1,7 +1,7 @@
 <template>
   <div>
     <MyHeader v-if="this.headerShowRule"></MyHeader>
-    <keep-alive include="Start">
+    <keep-alive>
       <router-view></router-view>
     </keep-alive>
   </div>
@@ -42,26 +42,14 @@
         if (sessionStorage.getItem("loginState")) {
           let loginState = JSON.parse(sessionStorage.getItem("loginState"))
           this.$store.state.isLogin = loginState.isLogin
-          console.log("同步vuex状态...");
-          if (loginState.isLogin) {   // 如果是登陆状态, 重新从服务器更新一下用户信息
-            this.$store.dispatch("login", loginState.loginUserInfo)
+          // console.log("正在同步vuex状态...");
 
-            // let uid = loginState.loginUserInfo.uid
-            // this.$axios.get(`/getUserById/${uid}`)
-            //   .then((response) => {
-            //     let result = response.data
-            //     if (response.status == 200 && result.code == 1000) {  // 如果查询成功. 则更新Vuex的登陆用户信息
-            //       this.$store.state.loginUserInfo = result.data
-            //     } 
-            //     else {
-            //       alert("更新登陆状态用户信息异常!")
-            //     }
-            //     console.log("更新登陆状态用户信息成功...");
-            //   })
-            //   .catch((error) => {
-            //     alert("网络异常,更新用户信息失败!")
-            //     console.log(error);
-            //   })
+          if (loginState.isLogin) {   // 如果是登陆状态, 重新从服务器更新一下用户信息
+              this.$store.dispatch("login", loginState.loginUserInfo)
+              .then((loginResult)=>{
+                // 登陆用户信息获取成功后.. 触发全局事件总线
+                this.$bus.$emit("loginInfoLoaded", loginResult.data)
+              })
           }
           else {
             this.$store.state.loginUserInfo = loginState.loginUserInfo

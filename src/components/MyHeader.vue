@@ -9,7 +9,6 @@
                         :default-active="activeIndex"
                         class="el-menu"
                         mode="horizontal"
-                        @select="handleSelect"
                         text-color="#fff"
                         :background-color= "menu_BgColor"
                         active-text-color="#F15B49">
@@ -42,7 +41,21 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
         mounted(){
             this.header_dom = document.querySelector('.el-container');
             
-            window.addEventListener('wheel', this.scrollFunc)         
+            // 当加载和首页切换走时触发
+            this.$bus.$on("changeHeaderEffect", (isHome)=>{
+                // 如果 是加载首页则  航条监听鼠标滚轮事件, 会变透明效果
+                if (isHome) {
+                    window.addEventListener('wheel', this.scrollFunc)
+                } 
+                // 首页已经切走, 移除上述效果
+                else {
+                    window.removeEventListener('wheel', this.scrollFunc) 
+                    this.header_dom.style.backgroundColor = "#455E7A"
+                    this.menu_BgColor = "#455E7A"
+                }
+                
+            })
+                     
         },
  
         data() {
@@ -64,20 +77,6 @@ import {mapState,mapMutations,mapAction } from 'vuex'  // 简写形式需要引�
             ...mapState(['loginUserInfo','isLogin'])
         },
         methods: {
-            /****  这里存在一个显示bug    ******/
-            handleSelect(path){   // 选中菜单项的回调函数
-                if (path != '/home'){
-                    // console.log("移除滚轮事件");
-                    window.removeEventListener('wheel', this.scrollFunc) 
-                    this.header_dom.style.backgroundColor = "#455E7A"
-                    this.menu_BgColor = "#455E7A"
-                } 
-                else {
-                    // console.log("添加滚轮事件!");
-                    window.addEventListener('wheel', this.scrollFunc) 
-                }
-            },
-
             // 注销功能
             logout(){
                 this.$confirm('此操作会退出登陆状态, 是否继续?', '提示', {

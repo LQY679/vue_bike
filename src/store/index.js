@@ -8,33 +8,32 @@ import axios from 'axios'
 
 const actions = {
     // 此方法, 登陆成功返回 true, 登陆失败(用户名,密码,用户类型输入有误)返回false 
+    /*
+        async 方法会默认返回一个 Promise对象, 可以通过 await 关键字 进行同步等待发送
+        同步请求
+     */
     async login(context, userInfo) {
-        return new Promise((resolve) => {
-            axios({
-                method: 'post',
-                url: "/login",
-                data: userInfo
-            })
-            .then(function (response) {
+         let response = await axios({
+            method: 'post',
+            url: "/login",
+            data: userInfo
+        }).catch(function (error) {
+            alert("登陆网络请求失败!")
+            console.log(error);
+        });
 
-                let result = response.data
-                if (result.code == 1000) {   // 登陆成功
-                    context.commit('LOGIN', result.data.userInfo)
-                }
-                console.log("更新用户信息成功!");
-                 resolve(result)
-            })
-            .catch(function (error) {
-                alert("登陆网络请求失败!")
-                console.log(error);
-            });
-        })
+        let result = response.data 
+        if (response.status &&result.code == 1000) {   // 登陆成功
+            context.commit('LOGIN', result.data.userInfo)
+        }
+        // console.log("更新用户信息成功!");
+        return result
     },
 
     // 当开始骑行时调用,提交订单请求(插入一条订单数据对象) , 成功返回 true, 失败返回false
     submitOrder(context, orderObj) {
         return new Promise((resolve) => {
-            console.log("发送请求插入订单数据...", orderObj);
+            // console.log("发送请求插入订单数据...", orderObj);
             axios.post('/createOrder', orderObj)
                 .then(function (response) {
                     if (response.status == 200 && response.data.code == 1000) {
@@ -57,7 +56,7 @@ const actions = {
     // 当结束骑行后调用,修改订单状态
     closeOrder(context, orderObj) {
         return new Promise((resolve) => {
-            console.log("发送请求修改订单状态...", orderObj);
+            // console.log("发送请求修改订单状态...", orderObj);
             axios.post('/stopOrder', orderObj)
                 .then(function (response) {
                     if (response.status == 200 && response.data.code == 1000) {

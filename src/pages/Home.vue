@@ -27,6 +27,21 @@ export default {
       }
   },
 
+  mounted(){
+    this.$bus.$emit("changeHeaderEffect",true)
+    // console.log("挂载首页组件...此时应该添加滚轮监听特效");
+  },
+
+  activated(){
+    this.$bus.$emit("changeHeaderEffect",true)
+    // console.log("首页组件路由激活..此时应该添加滚轮监听特效");
+  },
+
+  deactivated(){
+    this.$bus.$emit("changeHeaderEffect",false)
+    // console.log("首页组件切走..此时应该移除滚轮监听特效");
+  },
+
   components: {
     MyFooter
   },

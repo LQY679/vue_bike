@@ -29,10 +29,10 @@
       </el-descriptions-item>
     </el-descriptions>
 
-    <el-dialog title="修改用户信息" :visible.sync="isShowUserEditForm" :model="userForm"
+    <el-dialog title="修改用户信息" :visible.sync="isShowUserEditForm"  
       :close-on-click-moda="false" width="60vw" center>
       <!-- 用户信息表单 -->
-      <el-form label-position="'right'" label-width="80px">
+      <el-form label-position="'right'" label-width="80px" :model="userForm" :validate-on-rule-change="false">
         <el-form-item label="uid">
           <el-input disabled v-model="userForm.uid"></el-input>
         </el-form-item>
@@ -44,7 +44,7 @@
         <div v-if="this.editSelect=='email'">
           <el-form-item label="邮箱" prop="email" :rules="[
               { required: true, message: '邮箱地址不能为空', trigger: 'blur' },
-              { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] } ]">
+              { type: 'email', message: '邮箱格式错误! 请输入正确的邮箱地址', trigger: ['blur', 'change'] } ]">
             <el-input v-model="userForm.email"></el-input>
 
             <el-button type="primary" size="mini" v-if="showVerifyCode_btn" @click="getVerifyCode()"
@@ -99,7 +99,16 @@
     name: 'UserCenter',
 
     mounted() {
-      this.getUserOrder()
+
+      if (this.user.uid){
+        this.getUserOrder()
+      }
+
+      // 登陆信息加载完后触发, 解决刷新信息不同步问题
+      this.$bus.$on("loginInfoLoaded", ()=>{
+        this.user = this.$store.state.loginUserInfo
+        this.getUserOrder()
+      })
     },
 
     data() {
@@ -211,6 +220,7 @@
           // let messageType = 'success'
           if (response.status == 200 && result.code == 1000) {
             this.user = this.userForm
+            
             this.isShowUserEditForm = false
             this.$message({ message: '修改成功!', type: 'success' })
           }
@@ -281,6 +291,7 @@
           let messageType = 'success'
           if (response.status == 200 && result.code == 1000) {
             this.user = this.userForm
+            this.$store.state.loginUserInfo = this.userForm
             this.isShowUserEditForm = false
           }
           else {
