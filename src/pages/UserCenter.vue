@@ -54,13 +54,11 @@
 
           <el-form-item label="验证码" v-if="isShowVerifyCodeInput" prop="verifyCode" :rules="{
               required: true, message: '验证码不能为空', trigger: 'blur'}">
-            <el-input v-model="userForm.verifyCode"></el-input>
+            <el-input v-model="verifyCode"></el-input>
 
           </el-form-item>
         </div>
       </el-form>
-
-
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitEditUserForm()" :disabled="isDisabledSubmitUserForm_btn">提交修改
         </el-button>
@@ -115,6 +113,7 @@
       return {
         user: this.$store.state.loginUserInfo,
         userForm: {},
+        verifyCode: '',
         editSelect: '',  // 选择编辑的类型 可选: 'pwd' , 'email'
         orderList: [],
         isShowPwd: false,
@@ -166,7 +165,8 @@
 
       // 是否禁用 提交按钮 规则: 当编辑的是邮箱时并且邮箱未输入或者验证码未输入时会禁用
       isDisabledSubmitUserForm_btn() {
-        if (this.editSelect == 'email' && (this.userForm.email == '' || this.userForm.verifyCode == '')) {
+        console.log((this.userForm.email == '' || this.verifyCode == ''));
+        if (this.editSelect == 'email' && (this.userForm.email == '' || this.verifyCode == '')) {
           return true
         }
         else if (this.editSelect == 'pwd' && this.userForm.pwd == '') {
@@ -203,7 +203,7 @@
       // 点击按钮, 更新 '编辑选择' 的状态, 同时展示 用户信息表单
       editUserInfo(editSelect) {
         this.userForm = Object.assign({}, this.$store.state.loginUserInfo)  
-        this.userForm.verifyCode = ''
+        this.verifyCode = ''
         this.editSelect = editSelect
         this.isShowUserEditForm = true
 
@@ -283,7 +283,7 @@
           method: 'post',
           url: '/bindMail',
           params: {
-            code: this.userForm.verifyCode
+            code: this.verifyCode
           },
           data: this.userForm
         }).then((response) => {
