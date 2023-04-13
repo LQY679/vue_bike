@@ -99,19 +99,24 @@
         methods: {
             // 注销功能
             logout() {
-                this.$confirm('此操作会退出登陆状态, 是否继续?', '提示', {
+                this.$confirm('此操作会清除登陆状态, 是否继续?', '提示', {
                     confirmButtonText: '确定注销',
                     cancelButtonText: '取消',
                     type: 'warning'
-                }).then(() => {
-                    this.$message({ type: 'success', message: '删除成功!' });
-                    this.$store.commit("LOGOUT");
-                    // 注销后回到首页
-                    this.$router.replace({ path: '/home' })
-                }).catch(() => {
-                    this.$message({ type: 'info', message: '已取消删除' });
-                });
-            }
+                })
+                .then(() => {
+                    this.$store.dispatch("logout", this.loginUserInfo)
+                        .then((result) => {
+                            // 如果 请求响应的结果集 不为空, 即 http响应码200
+                            if (result) {
+                                this.$message({ type: 'warning', message: result.msg });
+                            }
+                            // 注销后回到首页    
+                            this.$router.replace({ path: '/home' }) 
+                        })
+
+                })
+            },
 
         },
         computed: {

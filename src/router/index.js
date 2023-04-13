@@ -1,123 +1,67 @@
-   /****路由配置*****/
+/****路由配置*****/
 //引入VueRouer插件
 import VueRouter from 'vue-router'
 
-//引入页面组件
-import AdminPanle from '../pages/AdminPanle.vue'
-import About from '../pages/About'
-import Home from '../pages/Home'
-import Start from '../pages/Start'
-import UserCenter from '../pages/UserCenter'
-import MobileUserLogin from '../pages/MobileUserLogin'
-import PublicInformation from '../pages/PublicInformation'
-
-import UserTable from '@/components/table/UserTable'
-import BikeTable from '@/components/table/BikeTable'
-import OrderTable from '@/components/table/OrderTable'
-import RepairTable from '@/components/table/RepairTable'
+import routeList from '@/router/routeList'
 
 import Store from '../store'  // 引入Vuex状态,获取数据
 
+
+
+// 解决导航栏或者底部导航tabBar中的vue-router在3.0版本以上频繁点击菜单报错的问题。
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err)
+}
+
+
 // 配置路由插件并且暴露模块
 const router = new VueRouter({
-    routes:[
-      {
-        path: "/",redirect: "/home"
-      },
-      {
-        name: "mobileLogin",
-        path: "/login",
-        component: MobileUserLogin,
-        meta:{titel:"登陆",isAuth:false}  // titel: 页面标题 , isAuth: 布尔值, 判断该路由是否需要登陆授权后才能进入
-      },
-      {   
-        path :'/adminPanle',
-        name :'adminPanle',
-        component: AdminPanle,
-        meta:{titel:"管理面板",isAuth:true},
-        children:[
-          {
-            path: 'userTable',
-            component: UserTable,
-            meta:{titel:"用户信息列表",isAuth:true},
-          },
-          {
-            path: 'bikeTable',
-            component: BikeTable,
-            meta:{titel:"车辆信息列表",isAuth:true},
-          },
-          {
-            path: 'orderTable',
-            component: OrderTable,
-            meta:{titel:"骑行订单信息列表",isAuth:true},
-          },
-          {
-            path: 'repairTable',
-            component: RepairTable,
-            meta:{titel:"车辆维修工单列表",isAuth:true},
-          }
-        ] 
-      },
-      {   
-        path :'/about',
-        name :'about',
-        component: About,
-        meta:{titel:"关于",isAuth:false}
-      },
-      {   
-        path :'/home',
-        name :'home',
-        component: Home,
-        meta:{titel:"首页",isAuth:false}
-      },
-      {   
-        path :'/start',
-        name :'start',
-        component: Start,
-        meta:{titel:"开始使用",isAuth:true}
-      },
-      {   
-        path :'/UserCenter',
-        name :'UserCenter',
-        component: UserCenter,
-        meta:{titel:"用户中心",isAuth:true}
-      },
-      {   
-        path :'/publicInformation',
-        name :'publicInformation',
-        component: PublicInformation,
-        meta:{titel:"公告信息",isAuth:false}
-      },
-      
-    ]
+  routes: routeList
 });
 
-router.beforeEach((to, from, next) => {
-  
-  // console.log("全局前置路由守卫:",Store.state);
 
+import { getCookie } from '../tool/toolFunction' // 自定义工具函数, 获取cookie
+import axios from '../request/axiosConfig'
+
+
+
+router.beforeEach((to, from, next) => {
   /*
-   包定时器是为了解决刷新登陆授权页面时,由于App组件中的Create钩子还没有把sessStore的数据拷贝到Vuex
-   路由守卫读取到的state为空的bug
-  */ 
-  setTimeout(()=>{
-    if (!to.meta.isAuth){  // 如果页面不需要授权,直接放行
-        next()
+  包定时器是为了解决刷新登陆授权页面时,由于App组件中的Create钩子还没有把sessStore的数据拷贝到Vuex
+  路由守卫读取到的state为空的bug
+*/
+  // 如果页面不需要授权,直接放行
+  setTimeout(async () => {
+    let response = ''
+    // 当不处于登陆状态, 并且 token 还没过期时, 携带token请求自动登陆
+    if (!Store.state.isLogin && getCookie("token")) {
+      console.log("路由守卫正在发起自动登陆...");
+      response = await axios.get('/autoLogin');
+      
     }
-    else{  // 需要授权则校验登陆状态
-        if (Store.state.isLogin){
-          next()
-        }
-        else{
-          alert("权限不足,请先登陆!")
-        }
+    let result = response.data
+    // console.log("log...",response);
+    if (response.status == 200 && result.code == 1000) {
+      Store.commit('LOGIN', result.data)
+      console.log("路由守卫自动登陆成功!");
     }
-  },0);
+    
+    // 不是需要授权的页面直接放行
+    if (!to.meta.isAuth) {
+      next()
+    }
+    // 需要授权则校验登陆状态,如果是登陆状态则放行
+    else if (Store.state.isLogin) next()
+
+    else alert("权限不足,请先登陆!")  // 访问需要授权页面并且没有登陆  
+  }, 1);
+
 })
 
 // 页面标题随着路由的改变而改变
 router.afterEach((to, from) => {
-	document.title = to.meta.titel || '小罗骑行'
+  document.title = to.meta.titel || '小罗骑行'
 
 })
 

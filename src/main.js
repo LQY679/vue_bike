@@ -11,7 +11,8 @@ Vue.use(VueRouter);
 
 import store from './store'
 
-import axios from 'axios' 
+// import axios from 'axios'
+import axios from './request/axiosConfig' 
 Vue.prototype.$axios = axios
 
 import './assets/css/global.css'

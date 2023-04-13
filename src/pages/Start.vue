@@ -23,7 +23,7 @@
     </div>
 
     <!-- 扫码组件对话框 -->
-    <el-dialog title="请扫描车辆编号二维码" :visible.sync="QRcodeScannerVisible" top="35vh" width="45vh">
+    <el-dialog title="请扫描车辆编号二维码" :visible.sync="QRcodeScannerVisible" top="25vh" width="35vh">
 
       <!-- <div v-if="QRcode.data">扫描结果:{{QRcode.data}}</div>
       <div v-if="QRcode.error">扫描错误:{{QRcode.error}}</div> -->
@@ -129,10 +129,17 @@
     },
 
     mounted() {
-      // 登陆信息加载完后触发
+
+      if (this.loginUserInfo.uid) {
+        this.queryUnfinishOrder()
+      }
+      /* 
+        登陆信息加载完后触发, 解决刷新时发送查询未完成订单时依赖的 vuex数据因为网络请求未完成还未完成初始化
+      */
       this.$bus.$on("loginInfoLoaded", ()=>{
         this.queryUnfinishOrder()
       })
+
       // 废弃方案
       // setTimeout(()=>{
       //   this.queryUnfinishOrder()
@@ -188,8 +195,7 @@
 
     methods: {
       async queryUnfinishOrder() {
-        console.log("Start挂载完毕,正在查询未完成订单..", this.$store.state.loginUserInfo);
-       
+        // console.log("Start挂载完毕,正在查询未完成订单..", this.loginUserInfo.uid);
         let response =await this.$axios.get('/getUnFinishOrderByUid', {
           params: {
             uid: this.loginUserInfo.uid

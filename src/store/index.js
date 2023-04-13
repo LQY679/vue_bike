@@ -1,10 +1,11 @@
+import { resolve } from "promise"
 import Vue from "vue"
 import Vuex from "vuex"
 
 // 使用Vuex之前必须先引入Vuex
 Vue.use(Vuex)
 
-import axios from 'axios'
+import axios from '../request/axiosConfig' 
 
 const actions = {
     // 此方法, 登陆成功返回 true, 登陆失败(用户名,密码,用户类型输入有误)返回false 
@@ -28,6 +29,27 @@ const actions = {
         }
         // console.log("更新用户信息成功!");
         return result
+    },
+
+    logout(context, user){
+        return new Promise((resolve)=>{
+            axios.post('/logout', user)
+                .then(function (response) {
+                    let result = response.data
+                    if (response.status == 200 && response.data.code == 1000) {
+                        context.commit("LOGOUT")
+                        console.log("注销成功...");
+                    }
+                    else {
+                        console.log("注销请求失败!", response);
+                    }
+                    resolve(result)                    
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    resolve(result)
+                });
+        })
     },
 
     // 当开始骑行时调用,提交订单请求(插入一条订单数据对象) , 成功返回 true, 失败返回false

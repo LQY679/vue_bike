@@ -1,15 +1,17 @@
 <template>
   <div>
     <MyHeader v-if="this.headerShowRule"></MyHeader>
-    <keep-alive>
-      <router-view></router-view>
-    </keep-alive>
+    <!-- 注意!! 首页主键必须是缓存路由组件, 因为导航条滚轮透明效果依赖这个 -->
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
 
   import MyHeader from './components/MyHeader.vue'
+
+  import Store from './store'  // 引入Vuex状态,获取数据
+  import { getCookie } from './tool/toolFunction' // 自定义工具函数, 获取cookie
 
   export default {
 
@@ -18,23 +20,80 @@
       MyHeader,
     },
     created() {
-      this.synchState();  // 刷新时同步Vuex数据
+      this.autoLogin_routeSwitch()
+      this.synchState();  // 刷新时触发,同步Vuex数据
       this.registerMobileListener()  // 注册媒体设备监听事件
+
     },
     mounted() {
-      // 在页面刷新或者重定向,假如登陆的用户是管理员,则自动跳转到管理面板界面
-      if (this.loginUserInfo.type == 'admin') {
-        this.$router.replace('/adminPanle')
-      }
     },
 
     data() {
       return {
+        isFirstCome: true,
         isMobile: window.matchMedia("(max-width: 550px)").matches ? true : false
+      }
+    },
+    watch: {
+      '$route'(to, from) {
+        if (to != 'home'){
+          this.$bus.$emit("changeHeaderEffect", false)
+          console.log("去的不是首页路由...此时应该移除滚轮监听特效");
+        } 
+        else {
+          console.log("去的是首页路由...");
+          this.$bus.$emit("changeHeaderEffect",true)
+        }
+          
       }
     },
 
     methods: {
+      autoLogin_routeSwitch() {
+        // 如果不是登陆状态, 并且 cookie 里有token, 发送自动登陆请求,在进行路由跳转校验
+        if (!sessionStorage.getItem("loginState") && !Store.state.loginUserInfo.uid && getCookie("token")) {
+          this.$axios.get('/autoLogin').then((response) => {
+            let result = response.data
+            if (response.status == 200 && result.code == 1000) {
+              Store.commit('LOGIN', result.data)
+              this.routeSwitching()
+            }
+          })
+        }
+        /*
+         否则直接路由跳转校验, 
+         这里判断 !sessionStorage.getItem("loginState") 是避免与synchState()函数起冲突重复跳转路由
+         */
+        else {
+          this.routeSwitching()
+        }
+      },
+
+      // 根据登陆状态和访问的设备类型决定首页路由跳转
+      routeSwitching() {
+
+        // 登陆状态下, 管理员跳转到 后台系统, 普通用户并且是移动端设备跳转到 使用界面
+        if (this.loginUserInfo.uid) {
+          console.log("存在登陆状态...");
+          if (this.loginUserInfo.type == 'admin') {
+            this.$router.replace('adminPanle/userTable')
+            return
+          }
+          else if (this.isMobile) {
+            this.$router.replace('/start')
+            return
+          }
+        }
+
+        // 没有登陆的情况下, 移动端设备跳转到登陆界面
+        if (this.isMobile) {
+          this.$router.replace({ path: '/login' })
+          return
+        }
+        // 没有登陆情况下, 非移动端设备跳转到首页
+        this.$router.replace('/home')
+      },
+
       // 通过sessionStorage临时存储状态数据解决Vuex刷新页面丢重置数据问题
       synchState() {
 
@@ -42,18 +101,30 @@
         if (sessionStorage.getItem("loginState")) {
           let loginState = JSON.parse(sessionStorage.getItem("loginState"))
           this.$store.state.isLogin = loginState.isLogin
-          // console.log("正在同步vuex状态...");
+          console.log("正在同步vuex状态...");
 
-          if (loginState.isLogin) {   // 如果是登陆状态, 重新从服务器更新一下用户信息
-              this.$store.dispatch("login", loginState.loginUserInfo)
-              .then((loginResult)=>{
-                // 登陆用户信息获取成功后.. 触发全局事件总线
-                this.$bus.$emit("loginInfoLoaded", loginResult.data)
+          if (loginState.loginUserInfo.uid) {   // 如果是登陆状态, 重新从服务器更新一下用户信息
+            this.$axios.get(`/getUserById/${loginState.loginUserInfo.uid}`)
+              .then((response) => {
+                let result = response.data
+                if (result && result.code == 1000) {
+                  // 登陆用户信息获取成功后.. 触发全局事件总线, UserCenter 和 Start 页面 依赖这个加载数据
+                  Store.commit('LOGIN', result.data)
+                  this.$bus.$emit("loginInfoLoaded", result.data)
+                  // 管理员处于登陆状态时, 跳转到管理面板
+                  if (result.data.type == 'admin') {
+                    this.$router.replace('adminPanle/userTable')
+                    return
+                  }
+                  else if (this.isMobile) {
+                    this.$router.replace('/start')
+                    return
+                  }
+                }
               })
           }
-          else {
-            this.$store.state.loginUserInfo = loginState.loginUserInfo
-          }
+          // 如果不是登陆状态, 并且是移动端设备访问,自动跳转至登陆界面
+          else if (this.isMobile) this.$router.replace({ path: '/login', })
 
           sessionStorage.removeItem("loginState")
         }
@@ -77,7 +148,6 @@
       registerMobileListener() {
         const mediaQueryList = window.matchMedia("(max-width: 550px)");
         mediaQueryList.addListener((event) => {
-          // console.log("媒体设备发生改变! isMobile", event.matches);
           this.isMobile = Boolean(event.matches)
           this.$bus.$emit("checkMobile", this.isMobile)
         });
