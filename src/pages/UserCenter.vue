@@ -34,18 +34,18 @@
       <!-- 用户信息表单 -->
       <el-form label-position="'right'" label-width="80px" :model="userForm" :validate-on-rule-change="false">
         <el-form-item label="uid">
-          <el-input disabled v-model="userForm.uid"></el-input>
+          <el-input disabled v-model="userForm.userInfo.uid"></el-input>
         </el-form-item>
 
         <el-form-item label="密码" v-if="this.editSelect=='pwd'">
-          <el-input v-model="userForm.pwd"></el-input>
+          <el-input v-model="userForm.userInfo.pwd"></el-input>
         </el-form-item>
 
         <div v-if="this.editSelect=='email'">
-          <el-form-item label="邮箱" prop="email" :rules="[
+          <el-form-item label="邮箱" prop="userInfo.email" :rules="[
               { required: true, message: '邮箱地址不能为空', trigger: 'blur' },
               { type: 'email', message: '邮箱格式错误! 请输入正确的邮箱地址', trigger: ['blur', 'change'] } ]">
-            <el-input v-model="userForm.email"></el-input>
+            <el-input v-model="userForm.userInfo.email"></el-input>
 
             <el-button type="primary" size="mini" v-if="showVerifyCode_btn" @click="getVerifyCode()"
               :disabled="isDisabledVerifyCode_btn" v-text="verifyCode_btn.text">
@@ -54,8 +54,7 @@
 
           <el-form-item label="验证码" v-if="isShowVerifyCodeInput" prop="verifyCode" :rules="{
               required: true, message: '验证码不能为空', trigger: 'blur'}">
-            <el-input v-model="verifyCode"></el-input>
-
+            <el-input v-model="userForm.verifyCode"></el-input>
           </el-form-item>
         </div>
       </el-form>
@@ -112,8 +111,11 @@
     data() {
       return {
         user: this.$store.state.loginUserInfo,
-        userForm: {},
-        verifyCode: '',
+        userForm: {
+          userInfo: {
+          },
+          verifyCode: '',
+        },
         editSelect: '',  // 选择编辑的类型 可选: 'pwd' , 'email'
         orderList: [],
         isShowPwd: false,
@@ -155,7 +157,7 @@
         }
       },
       showVerifyCode_btn() {
-        if (Boolean(this.userForm.email)) {
+        if (Boolean(this.userForm.userInfo.email)) {
           return true
         }
         else {
@@ -165,11 +167,10 @@
 
       // 是否禁用 提交按钮 规则: 当编辑的是邮箱时并且邮箱未输入或者验证码未输入时会禁用
       isDisabledSubmitUserForm_btn() {
-        console.log((this.userForm.email == '' || this.verifyCode == ''));
-        if (this.editSelect == 'email' && (this.userForm.email == '' || this.verifyCode == '')) {
+        if (this.editSelect == 'email' && (this.userForm.userInfo.email == '' || this.userForm.verifyCode == '')) {
           return true
         }
-        else if (this.editSelect == 'pwd' && this.userForm.pwd == '') {
+        else if (this.editSelect == 'pwd' && this.userForm.userInfo.pwd == '') {
           return true
         }
         return false
@@ -202,8 +203,7 @@
 
       // 点击按钮, 更新 '编辑选择' 的状态, 同时展示 用户信息表单
       editUserInfo(editSelect) {
-        this.userForm = Object.assign({}, this.$store.state.loginUserInfo)  
-        this.verifyCode = ''
+        this.userForm.userInfo = Object.assign({}, this.$store.state.loginUserInfo)  
         this.editSelect = editSelect
         this.isShowUserEditForm = true
 
@@ -214,12 +214,12 @@
         this.$axios({
           method: 'put',
           url: '/updateUser',
-          data: this.userForm
+          data: this.userForm.userInfo
         }).then((response) => {
           let result = response.data
           // let messageType = 'success'
           if (response.status == 200 && result.code == 1000) {
-            this.user = this.userForm
+            this.user = this.userForm.userInfo
             
             this.isShowUserEditForm = false
             this.$message({ message: '修改成功!', type: 'success' })
@@ -256,7 +256,7 @@
         this.$axios({
           method: 'post',
           url: '/sendBindMailVerifyCode',
-          data: this.userForm
+          data: this.userForm.userInfo
         }).then((response) => {
           let result = response.data
           let messageType = 'success'
@@ -283,15 +283,15 @@
           method: 'post',
           url: '/bindMail',
           params: {
-            code: this.verifyCode
+            code: this.userForm.verifyCode
           },
-          data: this.userForm
+          data: this.userForm.userInfo
         }).then((response) => {
           let result = response.data
           let messageType = 'success'
           if (response.status == 200 && result.code == 1000) {
-            this.user = this.userForm
-            this.$store.state.loginUserInfo = this.userForm
+            this.user = this.userForm.userInfo
+            this.$store.state.loginUserInfo = this.userForm.userInfo
             this.isShowUserEditForm = false
           }
           else {
