@@ -23,7 +23,6 @@
       this.autoLogin_routeSwitch()
       this.synchState();  // 刷新时触发,同步Vuex数据
       this.registerMobileListener()  // 注册媒体设备监听事件
-
     },
     mounted() {
     },

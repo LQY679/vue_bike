@@ -352,7 +352,7 @@
     uploadBikeFault(bike_id) {
       this.repair.bike_id = bike_id
       this.repair.uid = this.loginUserInfo.uid
-      this.create_time = new Date().toLocaleString().replaceAll('/', '-')
+      this.repair.create_time = new Date().toLocaleString().replaceAll('/', '-')
 
       this.$axios.post('/uploadBikeRepair', this.repair)
         .then((response) => {

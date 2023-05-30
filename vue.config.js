@@ -12,7 +12,7 @@ module.exports = defineConfig({
     // https: true, 配置不了,上线时如果不是https协议有隐私问题会导致扫码失败
     proxy: {
       '^/': {
-        target: 'http://localhost:8081',
+        target: 'https://localhost:8081',
         ws: false,
         changeOrigin: true,
         pathRewrite: {
